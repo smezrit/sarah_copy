@@ -216,7 +216,6 @@ def bootstrap_validation(
         model.fit(X_train, y_train)
 
         predictions = model.predict(X_test)
-
         iteration_metrics = regression_metrics(y_test, predictions)
 
         results.append(
@@ -236,6 +235,9 @@ def main() -> None:
     # Dataset and deterministic fingerprint for reproducibility.
     tips = sns.load_dataset("tips").dropna(subset=FEATURES + [TARGET]).copy()
     X, y = tips[FEATURES], tips[TARGET]
+    # Save the cleaned dataset as a data artifact
+    tips.to_csv("data_artifact.csv", index=False)
+    print("Saved data_artifact.csv")
     data_hash = hashlib.sha256(
         pd.util.hash_pandas_object(tips, index=True).values.tobytes()
     ).hexdigest()
@@ -310,11 +312,13 @@ def main() -> None:
 
     coefficient_frame = pd.DataFrame(coefficient_rows)
 
-    coefficient_frame = pd.DataFrame(coefficient_rows)
 
     coefficient_metrics, coefficient_summaries = coefficient_summary(coefficient_frame)
     metrics.update(coefficient_metrics)
-
+    # Save validation metrics as an evaluation artifact
+    evaluation_artifact = pd.DataFrame([metrics])
+    evaluation_artifact.to_csv("evaluation_artifact.csv", index=False)
+    print("Saved evaluation_artifact.csv")
     code_info = provenance()
     mlflow.set_experiment("tips-multivariable-linear-regression")
     with mlflow.start_run() as run:
